@@ -38,6 +38,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	sourcefs "github.com/fluxcd/source-controller/internal/fs"
@@ -354,6 +355,8 @@ func (s *Storage) Archive(artifact *sourcev1.Artifact, dir string, filter Archiv
 
 	gw := gzip.NewWriter(mw)
 	tw := tar.NewWriter(gw)
+
+	var skipped, included int
 	if err := filepath.Walk(dir, func(p string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -366,8 +369,10 @@ func (s *Storage) Archive(artifact *sourcev1.Artifact, dir string, filter Archiv
 
 		// Skip filtered files
 		if filter != nil && filter(p, fi) {
+			skipped++
 			return nil
 		}
+		included++
 
 		header, err := tar.FileInfoHeader(fi, p)
 		if err != nil {
@@ -418,6 +423,10 @@ func (s *Storage) Archive(artifact *sourcev1.Artifact, dir string, filter Archiv
 		tf.Close()
 		return err
 	}
+	ctrl.LoggerFrom(context.TODO()).Info("hey kurtis",
+		"total", skipped+included,
+		"skipped", skipped,
+		"included", included)
 
 	if err := tw.Close(); err != nil {
 		gw.Close()

@@ -26,6 +26,8 @@ import (
 
 	"github.com/go-logr/logr"
 	flag "github.com/spf13/pflag"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"helm.sh/helm/v3/pkg/getter"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -40,6 +42,7 @@ import (
 	"github.com/fluxcd/pkg/runtime/logger"
 	"github.com/fluxcd/pkg/runtime/pprof"
 	"github.com/fluxcd/pkg/runtime/probes"
+	zapr "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/fluxcd/source-controller/controllers"
@@ -138,7 +141,35 @@ func main() {
 
 	flag.Parse()
 
-	ctrl.SetLogger(logger.NewLogger(logOptions))
+	opts := zapr.Options{
+		Development: true,
+		Encoder: zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+			TimeKey:       "T",
+			LevelKey:      "L",
+			NameKey:       "N",
+			CallerKey:     "C",
+			FunctionKey:   zapcore.OmitKey,
+			MessageKey:    "M",
+			StacktraceKey: "S",
+			LineEnding:    zapcore.DefaultLineEnding,
+			EncodeLevel:   zapcore.CapitalColorLevelEncoder,
+			EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+				type appendTimeEncoder interface {
+					AppendTimeLayout(time.Time, string)
+				}
+				layout := "15:04:05.99"
+				if enc, ok := enc.(appendTimeEncoder); ok {
+					enc.AppendTimeLayout(t, layout)
+					return
+				}
+				enc.AppendString(t.Format(layout))
+			},
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.FullCallerEncoder,
+		}),
+	}
+
+	ctrl.SetLogger(zapr.New(zapr.UseFlagOptions(&opts), zapr.RawZapOpts(zap.AddCaller(), zap.AddCallerSkip(-1))))
 
 	// Set upper bound file size limits Helm
 	helm.MaxIndexSize = helmIndexLimit
@@ -245,7 +276,7 @@ func main() {
 		ControllerName: controllerName,
 		Cache:          c,
 		TTL:            ttl,
-		CacheRecorder: cacheRecorder,
+		CacheRecorder:  cacheRecorder,
 	}).SetupWithManagerAndOptions(mgr, controllers.HelmChartReconcilerOptions{
 		MaxConcurrentReconciles: concurrent,
 		RateLimiter:             helper.GetRateLimiter(rateLimiterOptions),
