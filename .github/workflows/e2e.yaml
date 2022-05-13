@@ -1,6 +1,8 @@
 name: e2e
 
-on: workflow_dispatch
+on:
+  repository_dispatch:
+    types: [ fluxcd-testing ]
 
 permissions:
   contents: read # for actions/checkout to fetch code
