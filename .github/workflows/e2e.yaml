@@ -36,9 +36,6 @@ jobs:
         run: |
           echo 'GO_TAGS=integration' >> $GITHUB_ENV
       - name: Run tests
-        env:
-          TEST_AZURE_ACCOUNT_NAME: ${{ secrets.TEST_AZURE_ACCOUNT_NAME }}
-          TEST_AZURE_ACCOUNT_KEY: ${{ secrets.TEST_AZURE_ACCOUNT_KEY }}
         run: make test
       - name: Setup Kubernetes
         uses: engineerd/setup-kind@v0.5.0
@@ -71,9 +68,6 @@ jobs:
         run: |
           echo 'GO_TAGS=integration' >> $GITHUB_ENV
       - name: Run tests
-        env:
-          TEST_AZURE_ACCOUNT_NAME: ${{ secrets.TEST_AZURE_ACCOUNT_NAME }}
-          TEST_AZURE_ACCOUNT_KEY: ${{ secrets.TEST_AZURE_ACCOUNT_KEY }}
         run: make test
       - name: Prepare
         id: prep
