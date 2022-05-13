@@ -1,0 +1,31 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: bets
+  namespace: fluxcd
+spec:
+  interval: 11s
+  url: https://github.com/tiagoangelozup/football-bets
+  ref:
+    branch: main
+  ignore: |
+    # exclude all
+    /*
+    # include chart dir
+    !/chart/football-bets
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: bets
+  namespace: fluxcd
+spec:
+  interval: 10s
+  chart:
+    spec:
+      chart: chart/football-bets
+      sourceRef:
+        kind: GitRepository
+        name: bets
+      reconcileStrategy: ChartVersion
