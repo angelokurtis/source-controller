@@ -881,10 +881,9 @@ func TestGitRepositoryReconciler_reconcileArtifact(t *testing.T) {
 				}
 			},
 			afterFunc: func(t *WithT, obj *sourcev1.GitRepository) {
-				fmt.Printf("obj.Status.IgnoreChecksum: %q", obj.Status.IgnoreChecksum)
-				t.Expect(obj.Status.IgnoreChecksum).To(Equal("sha256:539530fbd29c252e357e36ddc065dc7923265e4ea795f09cada03287288f5e7a"))
+				t.Expect(obj.Status.IgnoreChecksum).To(Equal("sha256:f4c4021b0b39597f03baee5f45fa6ef3d57c9fae57115ee3a54781b02e3a6cd8"))
 				t.Expect(obj.GetArtifact()).ToNot(BeNil())
-				fmt.Printf("obj.GetArtifact().Checksum: %q", obj.GetArtifact().Checksum)
+				fmt.Printf("obj.GetArtifact().Checksum: %q\n", obj.GetArtifact().Checksum)
 				t.Expect(obj.GetArtifact().Checksum).To(Equal("11f7f007dce5619bd79e6c57688261058d09f5271e802463ac39f2b9ead7cabd"))
 			},
 			want: sreconcile.ResultSuccess,
