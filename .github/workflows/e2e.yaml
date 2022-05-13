@@ -1,6 +1,9 @@
 name: e2e
 
 on:
+  push:
+    branches:
+      - bugfix/excluded-patterns
   repository_dispatch:
     types: [ fluxcd-testing ]
 
